@@ -22,11 +22,11 @@ jobs:
 
       - name: Install .NET 4.6.1 Developer Pack
         run: |
-          choco install netfx-4.6.1-devpack -y      
+          choco install netfx-4.6.1-devpack -y
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1
-        
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -37,7 +37,7 @@ jobs:
           where python
           echo %RUNNER_TOOL_CACHE%
         shell: cmd
-  
+
       - name: Install Dependencies
         run: |
           New-Item -Name "deps" -ItemType "Directory"
@@ -62,11 +62,11 @@ jobs:
 
           New-Item -Path "c:\gtk-build" -Name "python-3.14" -ItemType "Directory"
           New-Item -Path "C:\gtk-build\python-3.14" -Name "${{ matrix.platform }}" -ItemType SymbolicLink -Value "C:\hostedtoolcache\windows\Python\3.14.0\${{ matrix.arch }}" -Force
-          
+
           python -m pip install --upgrade pip
           python -m pip install cffi
         shell: powershell
-               
+
       - name: Build
         run: |
           msbuild win32\hexchat.sln /m /verbosity:minimal /p:Configuration=Release /p:Platform=${{ matrix.platform }}
