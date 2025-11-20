@@ -24,7 +24,7 @@ global_deps = []
 if cc.get_id() == 'msvc'
   libssl_dep = cc.find_library('libssl')
 else
-  libssl_dep = dependency('openssl', version: '>= 0.9.8',
+  libssl_dep = dependency('openssl', version: '>= 3.1.0',
                           required: get_option('tls'))
 endif
 
@@ -43,12 +43,17 @@ config_h.set('USE_LIBCANBERRA', libcanberra_dep.found())
 config_h.set('USE_DBUS', dbus_glib_dep.found())
 config_h.set('USE_PLUGIN', get_option('plugin'))
 
+config_h.set('OPENSSL_NO_DEPRECATED', true)
+
+config_h.set('G_DISABLE_DEPRECATED', true)
 config_h.set('G_DISABLE_SINGLE_INCLUDES', true)
 config_h.set('GTK_DISABLE_DEPRECATED', true)
 config_h.set('GTK_DISABLE_SINGLE_INCLUDES', true)
+#config_h.set('GDK_DISABLE_DEPRECATED', true)
+config_h.set('GDK_PIXBUF_DISABLE_DEPRECATED', true)
 config_h.set('GDK_PIXBUF_DISABLE_SINGLE_INCLUDES', true)
-config_h.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_2_36')
-config_h.set('GLIB_VERSION_MIN_REQUIRED', 'GLIB_VERSION_2_36')
+config_h.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_2_84')
+config_h.set('GLIB_VERSION_MIN_REQUIRED', 'GLIB_VERSION_2_84')
 
 # Detected features
 config_h.set('HAVE_MEMRCHR', cc.has_function('memrchr'))
@@ -190,7 +195,6 @@ if meson.version().version_compare('>= 0.53.0')
     'Python': get_option('with-python'),
     'Perl': get_option('with-perl'),
     'Perl Legacy API': get_option('with-perl-legacy-api'),
-    'FiSH': get_option('with-fishlim'),
     'Sysinfo': get_option('with-sysinfo'),
     'DCC Checksum': get_option('with-checksum'),
   }, section: 'Plugins')
