@@ -6,23 +6,37 @@ on:
   pull_request:
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
   windows_build:
-    runs-on: windows-2019
+    runs-on: windows-2025
     strategy:
       matrix:
-        platform: [x64, win32]
-        arch: [x64, x86]
-        exclude:
-          - platform: x64
-            arch: x86
-          - platform: win32
-            arch: x64
+        platform: [x64]
+        arch: [x64]
       fail-fast: false
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: Install .NET 4.6.1 Developer Pack
+        run: |
+          choco install netfx-4.6.1-devpack -y
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.14
+
+      - name: Show Python path
+        run: |
+          where python
+          echo %RUNNER_TOOL_CACHE%
+        shell: cmd
 
       - name: Install Dependencies
         run: |
@@ -46,15 +60,15 @@ jobs:
           Invoke-WebRequest https://github.com/hexchat/gvsbuild/releases/download/hexchat-2.16.2/perl-5.20.0-${{ matrix.arch }}.7z -OutFile deps\perl-${{ matrix.arch }}.7z
           & 7z.exe x deps\perl-${{ matrix.arch }}.7z -oC:\gtk-build\perl-5.20\${{ matrix.platform }}
 
-          New-Item -Path "c:\gtk-build" -Name "python-3.8" -ItemType "Directory"
-          New-Item -Path "c:\gtk-build\python-3.8" -Name "${{ matrix.platform }}" -ItemType "SymbolicLink" -Value "C:/hostedtoolcache/windows/Python/3.8.10/${{ matrix.arch }}"
+          New-Item -Path "C:\gtk-build" -Name "python-3.14" -ItemType "Directory"
+          New-Item -Path "C:\gtk-build\python-3.14" -Name "${{ matrix.platform }}" -ItemType SymbolicLink -Value "C:\hostedtoolcache\windows\Python\3.14.0\${{ matrix.arch }}" -Force
 
-          C:/hostedtoolcache/windows/Python/3.8.10/${{ matrix.arch }}/python.exe -m pip install cffi
+          python -m pip install --upgrade pip
+          python -m pip install cffi
         shell: powershell
 
       - name: Build
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat"
           msbuild win32\hexchat.sln /m /verbosity:minimal /p:Configuration=Release /p:Platform=${{ matrix.platform }}
         shell: cmd
 
@@ -64,12 +78,12 @@ jobs:
           move ..\hexchat-build .\
         shell: cmd
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: Installer ${{ matrix.arch }}
           path: HexChat*.exe
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: Build Files ${{ matrix.arch  }}
           path: hexchat-build
